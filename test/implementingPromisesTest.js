@@ -14,7 +14,7 @@ test('executor function is called immediately', function (t) {
     t.end();
 });
 
-test.skip('resolution handler is called when promise is resolved', function (t) {
+test('resolution handler is called when promise is resolved', function (t) {
 
     var testString = 'foo';
 
