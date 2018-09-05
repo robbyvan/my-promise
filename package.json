@@ -1,0 +1,7 @@
+{
+  "name": "my-promise",
+  "version": "1.0.0",
+  "description": "es6 implementation of promise",
+  "main": "index.js",
+  "license": "MIT"
+}
