@@ -3,5 +3,12 @@
   "version": "1.0.0",
   "description": "es6 implementation of promise",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test": "node_modules/.bin/tape test/**/*.js | node_modules/.bin/tap-spec"
+  },
+  "devDependencies": {
+    "tap-spec": "^5.0.0",
+    "tape": "^4.9.1"
+  }
 }
