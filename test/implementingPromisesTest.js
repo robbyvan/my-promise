@@ -30,7 +30,7 @@ test('resolution handler is called when promise is resolved', function (t) {
     });
 });
 
-test.skip('promise supports many resolution handlers', function (t) {
+test('promise supports many resolution handlers', function (t) {
 
     var testString = 'foo';
 

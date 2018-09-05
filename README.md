@@ -70,3 +70,27 @@ class MyPromise {
   }
 }
 ```
+
+### case 3: promise supports many resolution handlers.
+说明: promise支持多个resolution handler.
+```js
+// test case
+var testString = 'foo';
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve(testString);
+    }, 100);
+});
+
+promise.then(function (string) {
+    t.equal(string, testString);
+});
+
+promise.then(function (string) {
+    t.equal(string, testString);
+    t.end();
+});
+```
+
+Solution: 为了支持多个resolution handler, 所以在case 2中就先采用了一个queue来保存, 以支持多个then中的resolution handler.所以这里case 3在case 2中就已经实现了.
