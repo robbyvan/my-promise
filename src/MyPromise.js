@@ -8,14 +8,18 @@ class MyPromise {
     this._resolutionQueue = [];
     this._rejectionQueue = [];
 
-    executor(this.resolve.bind(this), this.reject.bind(this));
+    try {
+      executor(this.resolve.bind(this), this.reject.bind(this));
+    } catch(e) {
+      this._reject(e);
+    }
   }
 
   // resolution
   _runResolutionHandlers() {
     while(this._resolutionQueue.length > 0) {
       const resolution = this._resolutionQueue.shift();
-      
+
       let returnValue;
       try {
         returnValue = resolution.handler(this._value)

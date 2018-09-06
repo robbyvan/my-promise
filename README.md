@@ -895,3 +895,146 @@ class MyPromise {
   }
 }
 ```
+
+case 12: rejection handlers catch synchronous errors in the executor function.
+```js
+// test case
+
+var testError = new Error('Something went wrong');
+
+var promise = new MyPromise(function () {
+    throw testError;
+});
+
+promise.then(function () {
+    return new MyPromise(function (resolve) {
+        setTimeout(function () {
+            resolve(testError);
+        }, 100);
+    });
+}).catch(function (value) {
+    t.equal(value, testError);
+    t.end();
+});
+```
+
+说明: main promise的executor就有错. 需要捕获.   
+
+解决: 同case 11, 去try-catch executor就好.
+```js
+// solution
+
+class MyPromise {
+  constructor(executor) {
+    this._state = 'pending';
+
+    this._value;
+    this._rejectionReason;
+
+    this._resolutionQueue = [];
+    this._rejectionQueue = [];
+    
+    // 💡这里
+    try {
+      executor(this.resolve.bind(this), this.reject.bind(this));
+    } catch(e) {
+      this._reject(e);
+    }
+  }
+
+  // resolution
+  _runResolutionHandlers() {
+    while(this._resolutionQueue.length > 0) {
+      const resolution = this._resolutionQueue.shift();
+
+      let returnValue;
+      try {
+        returnValue = resolution.handler(this._value)
+      } catch(e) {
+        resolution.promise.reject(e);
+      }
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue
+          .then(v => {
+            resolution.promise.resolve(v);
+          })
+          .catch(e => {
+            resolution.promise.reject(e);
+          })
+      } else {
+        resolution.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  resolve(value) {
+    if (this._state === 'pending') {
+      this._state = 'resolved';
+      this._value = value;
+
+      this._runResolutionHandlers();
+    }
+  }
+
+  then(resolutionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'resolved') {
+      this._runResolutionHandlers();
+    }
+
+    return newPromise;
+  }
+
+  // rejection
+  _runRejectionHandlers() {
+    while(this._rejectionQueue.length > 0) {
+      const rejection = this._rejectionQueue.shift();
+      const returnValue = rejection.handler(this._rejectionReason);
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue.then(v => {
+          rejection.promise.resolve(v);
+        });
+      } else {
+        rejection.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  reject(reason) {
+    if (this._state === 'pending') {
+      this._state = 'rejected';
+      this._rejectionReason = reason;
+
+      this._runRejectionHandlers();
+
+      while (this._resolutionQueue.length > 0) {
+        const resolution = this._resolutionQueue.shift();
+        resolution.promise.reject(this._rejectionReason);
+      }
+    }
+  }
+
+  catch(rejectionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._rejectionQueue.push({
+      handler: rejectionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'rejected') {
+      this._runRejectionHandlers();
+    }
+
+    return newPromise;
+  }
+}
+```
