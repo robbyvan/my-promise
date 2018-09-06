@@ -761,3 +761,137 @@ class MyPromise {
   }
 }
 ```
+
+case 11: rejection handlers catch synchronous errors in resolution handlers.
+```js
+// test case
+
+var testError = new Error('Something went wrong');
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve();
+    }, 100);
+});
+
+promise.then(function () {
+    throw testError;
+}).catch(function (value) {
+    t.equal(value, testError);
+    t.end();
+});
+```
+说明: 在执行同步resolutionHandler时产生的error需要被正确捕获. 比如第一个then直接throw一个error.. - -
+
+解决: 把throw出来的error使用reject处理就好了. 所以去用try-catch去捕获handler执行后的结果, 也就是returnValue.
+
+```js
+class MyPromise {
+  constructor(executor) {
+    this._state = 'pending';
+
+    this._value;
+    this._rejectionReason;
+
+    this._resolutionQueue = [];
+    this._rejectionQueue = [];
+
+    executor(this.resolve.bind(this), this.reject.bind(this));
+  }
+
+  // resolution
+  _runResolutionHandlers() {
+    while(this._resolutionQueue.length > 0) {
+      const resolution = this._resolutionQueue.shift();
+      // 💡这里
+      let returnValue;
+      try {
+        returnValue = resolution.handler(this._value)
+      } catch(e) {
+        resolution.promise.reject(e);
+      }
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue
+          .then(v => {
+            resolution.promise.resolve(v);
+          })
+          .catch(e => {
+            resolution.promise.reject(e);
+          })
+      } else {
+        resolution.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  resolve(value) {
+    if (this._state === 'pending') {
+      this._state = 'resolved';
+      this._value = value;
+
+      this._runResolutionHandlers();
+    }
+  }
+
+  then(resolutionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'resolved') {
+      this._runResolutionHandlers();
+    }
+
+    return newPromise;
+  }
+
+  // rejection
+  _runRejectionHandlers() {
+    while(this._rejectionQueue.length > 0) {
+      const rejection = this._rejectionQueue.shift();
+      const returnValue = rejection.handler(this._rejectionReason);
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue.then(v => {
+          rejection.promise.resolve(v);
+        });
+      } else {
+        rejection.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  reject(reason) {
+    if (this._state === 'pending') {
+      this._state = 'rejected';
+      this._rejectionReason = reason;
+
+      this._runRejectionHandlers();
+
+      while (this._resolutionQueue.length > 0) {
+        const resolution = this._resolutionQueue.shift();
+        resolution.promise.reject(this._rejectionReason);
+      }
+    }
+  }
+
+  catch(rejectionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._rejectionQueue.push({
+      handler: rejectionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'rejected') {
+      this._runRejectionHandlers();
+    }
+
+    return newPromise;
+  }
+}
+```

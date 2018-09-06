@@ -15,7 +15,13 @@ class MyPromise {
   _runResolutionHandlers() {
     while(this._resolutionQueue.length > 0) {
       const resolution = this._resolutionQueue.shift();
-      const returnValue = resolution.handler(this._value);
+      
+      let returnValue;
+      try {
+        returnValue = resolution.handler(this._value)
+      } catch(e) {
+        resolution.promise.reject(e);
+      }
 
       if (returnValue && returnValue instanceof MyPromise) {
         returnValue

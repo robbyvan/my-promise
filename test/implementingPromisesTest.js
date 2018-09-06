@@ -199,7 +199,7 @@ test('rejecting promises returned from resolution handlers are caught properly',
         });
 });
 
-test.skip('rejection handlers catch synchronous errors in resolution handlers', function (t) {
+test('rejection handlers catch synchronous errors in resolution handlers', function (t) {
     var testError = new Error('Something went wrong');
 
     var promise = new MyPromise(function (resolve) {
@@ -216,7 +216,7 @@ test.skip('rejection handlers catch synchronous errors in resolution handlers', 
     });
 });
 
-test.skip('rejection handlers catch synchronous errors in the executor function', function (t) {
+test('rejection handlers catch synchronous errors in the executor function', function (t) {
     var testError = new Error('Something went wrong');
 
     var promise = new MyPromise(function () {
