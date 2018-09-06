@@ -50,13 +50,20 @@ class MyPromise {
     }
   }
 
-  then(resolutionHandler) {
+  then(resolutionHandler, rejectionHandler) {
     const newPromise = new MyPromise(() => {});
 
     this._resolutionQueue.push({
       handler: resolutionHandler,
       promise: newPromise
     });
+
+    if (typeof rejectionHandler === 'function') {
+      this._rejectionQueue.push({
+        handler: rejectionHandler,
+        promise: newPromise
+      });
+    }
 
     if (this._state === 'resolved') {
       this._runResolutionHandlers();

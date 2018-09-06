@@ -311,7 +311,7 @@ test('rejecting promises returned from rejection handlers are caught properly', 
         });
 });
 
-test.skip('second argument in then is treated as a rejection handler', function (t) {
+test('second argument in then is treated as a rejection handler', function (t) {
     var testError = new Error('Something went wrong');
 
 
