@@ -257,7 +257,7 @@ test('rejection handlers catch synchronous errors', function (t) {
         });
 });
 
-test.skip('chaining works after "catch"', function (t) {
+test('chaining works after "catch"', function (t) {
     var testString = 'foo';
 
     var promise = new MyPromise(function (resolve) {

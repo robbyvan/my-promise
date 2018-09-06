@@ -988,7 +988,7 @@ class MyPromise {
     if (this._state === 'resolved') {
       this._runResolutionHandlers();
     }
-    
+
     // 💡这里
     if (this._state === 'rejected') {
       newPromise.reject(this._rejectionReason);
@@ -1225,4 +1225,4 @@ promise
 
 说明: 要让在catch后面注册的then仍然有效.   
 
-解决: 
+解决: 参考case 8的comment, 在newPromise里仍然调用的是resolve来chain then. 已经在之前实现了.
