@@ -235,7 +235,7 @@ test('rejection handlers catch synchronous errors in the executor function', fun
     });
 });
 
-test.skip('rejection handlers catch synchronous erros', function (t) {
+test.skip('rejection handlers catch synchronous errors', function (t) {
     var testError = new Error('Something went wrong');
 
     var promise = new MyPromise(function (resolve) {

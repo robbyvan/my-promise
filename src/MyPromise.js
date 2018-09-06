@@ -69,7 +69,13 @@ class MyPromise {
   _runRejectionHandlers() {
     while(this._rejectionQueue.length > 0) {
       const rejection = this._rejectionQueue.shift();
-      const returnValue = rejection.handler(this._rejectionReason);
+      
+      let returnValue;
+      try {
+        returnValue = rejection.handler(this._rejectionReason)
+      } catch(e) {
+        resolution.promise.reject(e);
+      }
 
       if (returnValue && returnValue instanceof MyPromise) {
         returnValue.then(v => {
