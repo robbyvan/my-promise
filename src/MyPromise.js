@@ -82,8 +82,12 @@ class MyPromise {
       }
 
       if (returnValue && returnValue instanceof MyPromise) {
-        returnValue.then(v => {
+        returnValue
+        .then(v => {
           rejection.promise.resolve(v);
+        })
+        .catch(e => {
+          rejection.promise.reject(e);
         });
       } else {
         rejection.promise.resolve(returnValue);

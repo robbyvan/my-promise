@@ -284,7 +284,7 @@ test('chaining works after "catch"', function (t) {
 });
 
 
-test.skip('rejecting promises returned from rejection handlers are caught properly', function (t) {
+test('rejecting promises returned from rejection handlers are caught properly', function (t) {
     var testError = new Error('Something went wrong');
 
 

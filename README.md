@@ -656,7 +656,7 @@ promise
 ```
 说明: 之前的实现没有对中间产生的```return promise```的reject进行处理, 所以catch捕获不到错误.   
 
-解决: 只需要catch到这个错误然后在reject就好了, 这样rejectReason会在主链上继续传递.
+解决: 只需要catch到这个错误然后再reject就好了, 这样rejectReason会在主链上继续传递.
 
 ```js
 // solution 
@@ -685,7 +685,7 @@ class MyPromise {
           .then(v => {
             resolution.promise.resolve(v);
           })
-          // 这里
+          // 💡这里
           .catch(e => {
             resolution.promise.reject(e);
           })
@@ -1230,3 +1230,170 @@ promise
 说明: 要让在catch后面注册的then仍然有效.   
 
 解决: 参考case 8的comment, 在newPromise里仍然调用的是resolve来chain then. 已经在之前实现了.
+
+
+### case 15: rejecting promises returned from rejection handlers are caught properly.
+
+```js
+// test case
+
+var testError = new Error('Something went wrong');
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve();
+    }, 100);
+});
+
+promise
+    .then(function () {
+        throw new Error('some Error');
+    })
+    .catch(function () {
+        return new MyPromise(function (resolve, reject) {
+            setTimeout(function () {
+                reject(testError);
+            }, 100);
+        });
+    })
+    .catch(function (value) {
+        t.equal(value, testError);
+        t.end();
+    });
+```
+
+说明: 类似case 10. 之前的实现没有对rejectionHandler产生的```return promise```的reject进行处理, 所以catch捕获不到错误.   
+
+解决: 同case 10.
+
+```js
+class MyPromise {
+  constructor(executor) {
+    this._state = 'pending';
+
+    this._value;
+    this._rejectionReason;
+
+    this._resolutionQueue = [];
+    this._rejectionQueue = [];
+
+    try {
+      executor(this.resolve.bind(this), this.reject.bind(this));
+    } catch(e) {
+      this.reject(e);
+    }
+  }
+
+  // resolution
+  _runResolutionHandlers() {
+    while(this._resolutionQueue.length > 0) {
+      const resolution = this._resolutionQueue.shift();
+
+      let returnValue;
+      try {
+        returnValue = resolution.handler(this._value)
+      } catch(e) {
+        resolution.promise.reject(e);
+      }
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue
+          .then(v => {
+            resolution.promise.resolve(v);
+          })
+          .catch(e => {
+            resolution.promise.reject(e);
+          })
+      } else {
+        resolution.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  resolve(value) {
+    if (this._state === 'pending') {
+      this._state = 'resolved';
+      this._value = value;
+
+      this._runResolutionHandlers();
+    }
+  }
+
+  then(resolutionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'resolved') {
+      this._runResolutionHandlers();
+    }
+
+    if (this._state === 'rejected') {
+      newPromise.reject(this._rejectionReason);
+    }
+
+    return newPromise;
+  }
+
+  // rejection
+  _runRejectionHandlers() {
+    while(this._rejectionQueue.length > 0) {
+      const rejection = this._rejectionQueue.shift();
+
+      let returnValue;
+      try {
+        returnValue = rejection.handler(this._rejectionReason)
+      } catch(e) {
+        rejection.promise.reject(e);
+      }
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue
+        .then(v => {
+          rejection.promise.resolve(v);
+        })
+        // 💡这里
+        .catch(e => {
+          rejection.promise.reject(e);
+        });
+      } else {
+        rejection.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  reject(reason) {
+    if (this._state === 'pending') {
+      this._state = 'rejected';
+      this._rejectionReason = reason;
+
+      this._runRejectionHandlers();
+
+      while (this._resolutionQueue.length > 0) {
+        const resolution = this._resolutionQueue.shift();
+        resolution.promise.reject(this._rejectionReason);
+      }
+    }
+  }
+
+  catch(rejectionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._rejectionQueue.push({
+      handler: rejectionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'rejected') {
+      this._runRejectionHandlers();
+    }
+
+    return newPromise;
+  }
+}
+
+module.exports = MyPromise;
+```
