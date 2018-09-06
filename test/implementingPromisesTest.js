@@ -175,7 +175,7 @@ test('rejections are passed downstream', function (t) {
     });
 });
 
-test.skip('rejecting promises returned from resolution handlers are caught properly', function (t) {
+test('rejecting promises returned from resolution handlers are caught properly', function (t) {
     var testError = new Error('Something went wrong');
 
 

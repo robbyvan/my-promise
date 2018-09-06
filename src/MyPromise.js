@@ -14,13 +14,17 @@ class MyPromise {
   // resolution
   _runResolutionHandlers() {
     while(this._resolutionQueue.length > 0) {
-      let resolution = this._resolutionQueue.shift();
+      const resolution = this._resolutionQueue.shift();
       const returnValue = resolution.handler(this._value);
 
       if (returnValue && returnValue instanceof MyPromise) {
-        returnValue.then(v => {
-          resolution.promise.resolve(v);
-        });
+        returnValue
+          .then(v => {
+            resolution.promise.resolve(v);
+          })
+          .catch(e => {
+            resolution.promise.reject(e);
+          })
       } else {
         resolution.promise.resolve(returnValue);
       }
@@ -54,7 +58,7 @@ class MyPromise {
   // rejection
   _runRejectionHandlers() {
     while(this._rejectionQueue.length > 0) {
-      let rejection = this._rejectionQueue.shift();
+      const rejection = this._rejectionQueue.shift();
       const returnValue = rejection.handler(this._rejectionReason);
 
       if (returnValue && returnValue instanceof MyPromise) {
@@ -75,7 +79,7 @@ class MyPromise {
       this._runRejectionHandlers();
 
       while (this._resolutionQueue.length > 0) {
-        let resolution = this._resolutionQueue.shift();
+        const resolution = this._resolutionQueue.shift();
         resolution.promise.reject(this._rejectionReason);
       }
     }
