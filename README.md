@@ -178,3 +178,29 @@ class MyPromise {
   }
 }
 ```
+
+### case 5: chaining works with non-promise return values.
+说明: 在case 4中我们只解决了handler返回一个promise类型时可以chain的效果, 但是如果返回了一个非promise的值, 我们并没有调用resolve去衔接promise. promise chain就这样断开了.
+
+```js
+// test case
+
+var testString = 'foo';
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve();
+    }, 100);
+});
+
+promise.then(function () {
+
+    return testString;
+
+}).then(function (string) {
+    t.equal(string, testString);
+    t.end();
+});
+```
+
+解决: 在resolve的if后添加一个else, 用来处理返回值不是MP类型的"结果"
