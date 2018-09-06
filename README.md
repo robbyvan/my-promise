@@ -283,3 +283,87 @@ class MyPromise {
   }
 }
 ```
+
+### case 7: calling resolve second time has no effect.
+说明: 在handler中调用第二次resolve方法不要产生影响. (只有第一次resolve是有效的)
+
+```js
+// test case
+
+var testString = 'foo';
+var testString2 = 'bar';
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve(testString);
+        resolve(testString2);
+    }, 100);
+});
+
+promise.then(function (value) {
+    t.equal(value, testString);
+
+    setTimeout(function () {
+        promise.then(function (value) {
+            t.equal(value, testString);
+            t.end();
+        });
+    }, 100);
+});
+```
+
+解决: 在第一次resolve之后我们会改变pending => resolved, 所以在resolve()中只要检查状态就好. 如果已经resolved了, skip之后的method.
+
+```js
+// Solution
+
+class MyPromise {
+  constructor(executor) {
+    this._state = 'pending';
+    this._value;
+
+    this._resolutionQueue = [];
+
+    executor(this.resolve.bind(this));
+  }
+
+  _runResolutionHandlers() {
+    while(this._resolutionQueue.length > 0) {
+      let resolution = this._resolutionQueue.shift();
+      const returnValue = resolution.handler(this._value);
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue.then(v => {
+          resolution.promise.resolve(v);
+        });
+      } else {
+        resolution.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  resolve(value) {
+    if (this._state === 'pending') {
+      this._state = 'resolved';
+      this._value = value;
+
+      this._runResolutionHandlers();
+    }
+  }
+
+  then(resolutionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'resolved') {
+      this._runResolutionHandlers();
+    }
+
+    return newPromise;
+  }
+}
+```

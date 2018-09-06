@@ -115,7 +115,7 @@ test('resolution handlers can be attached when promise is resolved', function (t
     });
 });
 
-test.skip('calling resolve second time has no effect', function (t) {
+test('calling resolve second time has no effect', function (t) {
 
     var testString = 'foo';
     var testString2 = 'bar';

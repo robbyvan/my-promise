@@ -24,10 +24,12 @@ class MyPromise {
   }
 
   resolve(value) {
-    this._state = 'resolved';
-    this._value = value;
+    if (this._state === 'pending') {
+      this._state = 'resolved';
+      this._value = value;
 
-    this._runResolutionHandlers();
+      this._runResolutionHandlers();
+    }
   }
 
   then(resolutionHandler) {
