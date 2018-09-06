@@ -73,6 +73,11 @@ class MyPromise {
       this._rejectionReason = reason;
 
       this._runRejectionHandlers();
+
+      while (this._resolutionQueue.length > 0) {
+        let resolution = this._resolutionQueue.shift();
+        resolution.promise.reject(this._rejectionReason);
+      }
     }
   }
 
@@ -90,7 +95,6 @@ class MyPromise {
 
     return newPromise;
   }
-
 }
 
 module.exports = MyPromise;
