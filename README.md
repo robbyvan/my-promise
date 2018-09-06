@@ -9,6 +9,10 @@ Implement promise in es6 case by case.
 new MyPromise(function () {
     string = 'foo';
 });
+
+t.equal(string, 'foo');
+
+t.end();
 ```
 说明: executor需要立即执行.   
 
