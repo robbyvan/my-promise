@@ -139,7 +139,7 @@ test('calling resolve second time has no effect', function (t) {
     });
 });
 
-test.skip('rejection handler is called when promise is rejected', function (t) {
+test('rejection handler is called when promise is rejected', function (t) {
     var testError = new Error('Something went wrong');
 
     var promise = new MyPromise(function (resolve, reject) {
