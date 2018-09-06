@@ -204,3 +204,82 @@ promise.then(function () {
 ```
 
 解决: 在resolve的if后添加一个else, 用来处理返回值不是MP类型的"结果"
+
+
+### case 6: resolution handlers can be attached when promise is resolved.
+说明: 要让resolution handler在promise被resolve之后仍然可以通过then添加并执行. 之前的情况都是async executor完成后就自动调用了resolve来"解决", 在resolve了之后attach的then, 仅仅是push进了queue而不会被执行.
+
+```js
+// test case
+
+var testString = 'foo';
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve(testString);
+    }, 100);
+});
+
+promise.then(function () {
+    setTimeout(function () {
+        promise.then(function (value) {
+            t.equal(value, testString);
+            t.end();
+        });
+    }, 100);
+});
+```
+
+解决: 引入状态, 对于没resolve之前pending态下的then, 只需push进queue就好. 而resolved态下的then, 需要立刻run对应的handler. 状态的变化从pending => resolved发生在resolve被调用. 这时除了改变state, 还需要保存传入resolve的value(用被resolved态下的then执行时使用), 所以为MP引入一个value属性来保存resolve后的值(即"结果"). 让之后的then还能继续"解决"这个"结果".
+
+```js
+// solution
+
+class MyPromise {
+  constructor(executor) {
+    this._state = 'pending';
+    this._value;
+
+    this._resolutionQueue = [];
+
+    executor(this.resolve.bind(this));
+  }
+
+  _runResolutionHandlers() {
+    while(this._resolutionQueue.length > 0) {
+      let resolution = this._resolutionQueue.shift();
+      const returnValue = resolution.handler(this._value);
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue.then(v => {
+          resolution.promise.resolve(v);
+        });
+      } else {
+        resolution.promise.resolve(returnValue);
+      }
+    }
+  }
+
+  resolve(value) {
+    this._state = 'resolved';
+    this._value = value;
+
+    this._runResolutionHandlers();
+  }
+
+  then(resolutionHandler) {
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    if (this._state === 'resolved') {
+      this._runResolutionHandlers();
+    }
+
+    return newPromise;
+  }
+}
+```

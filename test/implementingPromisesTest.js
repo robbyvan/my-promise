@@ -95,7 +95,7 @@ test('chaining works with non-promise return values', function (t) {
     });
 });
 
-test.skip('resolution handlers can be attached when promise is resolved', function (t) {
+test('resolution handlers can be attached when promise is resolved', function (t) {
 
     var testString = 'foo';
 
