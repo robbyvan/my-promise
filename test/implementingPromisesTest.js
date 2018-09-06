@@ -51,7 +51,7 @@ test('promise supports many resolution handlers', function (t) {
 });
 
 
-test.skip('resolution handlers can be chained', function (t) {
+test('resolution handlers can be chained', function (t) {
 
     var testString = 'foo';
 

@@ -7,13 +7,27 @@ class MyPromise {
 
   resolve(value) {
     while(this._resolutionQueue.length > 0) {
-      let handler = this._resolutionQueue.shift();
-      handler(value);
+      let resolution = this._resolutionQueue.shift();
+      const returnValue = resolution.handler(value);
+
+      if (returnValue && returnValue instanceof MyPromise) {
+        returnValue.then(v => {
+          resolution.promise.resolve(v);
+        });
+      }
+
     }
   }
 
   then(resolutionHandler) {
-    this._resolutionQueue.push(resolutionHandler);
+    const newPromise = new MyPromise(() => {});
+
+    this._resolutionQueue.push({
+      handler: resolutionHandler,
+      promise: newPromise
+    });
+
+    return newPromise;
   }
 }
 
