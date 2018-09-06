@@ -14,6 +14,8 @@ class MyPromise {
         returnValue.then(v => {
           resolution.promise.resolve(v);
         });
+      } else {
+        resolution.promise.resolve(returnValue);
       }
 
     }

@@ -75,7 +75,7 @@ test('resolution handlers can be chained', function (t) {
     });
 });
 
-test.skip('chaining works with non-promise return values', function (t) {
+test('chaining works with non-promise return values', function (t) {
 
     var testString = 'foo';
 
