@@ -331,7 +331,7 @@ test('second argument in then is treated as a rejection handler', function (t) {
 
 });
 
-test.skip('second argument in then is attached to the promise then is called on', function (t) {
+test('second argument in then is attached to the promise then is called on', function (t) {
     var testError = new Error('Something went wrong');
     var didRun = false;
 

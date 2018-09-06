@@ -1561,3 +1561,41 @@ class MyPromise {
 }
 
 ```
+
+
+### case 17: second argument in then is attached to the promise then is called on.
+
+```js
+// test case
+
+var testError = new Error('Something went wrong');
+var didRun = false;
+
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve();
+    }, 100);
+});
+
+promise
+    .then(
+        function () {
+            return new MyPromise(function (resolve, reject) {
+                setTimeout(function () {
+                    reject(testError);
+                }, 100);
+            });
+        },
+        function () {
+            didRun = true;
+        })
+    .catch(function (error) {
+        t.equal(error, testError);
+        t.equal(didRun, false);
+        t.end();
+    });
+```
+说明: then方法中注册的第二个参数onRejected是attch在它所在then的上一个promise上的, 如test case, didRun仅在main promise被reject时执行, 而不会因为同层的onFulfilled被reject而触发. onFulfilled的reject是在catch中被接收.   
+
+实现: 在整个实现当中, 无论fulfilled还是rejected都是往下层传播的, 并不会影响同层, 所以这里不需要做任何修改.
