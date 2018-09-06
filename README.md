@@ -3,7 +3,7 @@ Implement a basic promise in es6 step by step.
 实现一个基本的MyPromise(后面简称MP).   
 
 ### 说明
-之前在网上看见的promise实现原理都描述的不是特别清晰, 所以这里结合youtube上![@vividbytes](https://www.youtube.com/watch?v=C3kUMPtt4hY&t=140s)的实现方式重新整理了一份promise基础实现思路, 加入一些理解来step by step实现一个基础promise. 这里的实现并不是最佳的, 也有edge cases没有考虑, 但是可以很方便理解promise怎么实现异步的.
+之前在网上看见的promise实现原理都描述的不是特别清晰, 所以这里结合youtube上[@vividbytes](https://www.youtube.com/watch?v=C3kUMPtt4hY&t=140s)的实现方式重新整理了一份promise基础实现思路, 加入一些理解来step by step实现一个基础promise. 这里的实现并不是最佳的, 也有edge cases没有考虑, 但是可以很方便理解promise怎么实现异步的.
 
 有误的地方还请大佬指证 _(:з」∠)_
 
