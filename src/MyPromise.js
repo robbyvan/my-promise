@@ -11,7 +11,7 @@ class MyPromise {
     try {
       executor(this.resolve.bind(this), this.reject.bind(this));
     } catch(e) {
-      this._reject(e);
+      this.reject(e);
     }
   }
 
@@ -62,6 +62,10 @@ class MyPromise {
       this._runResolutionHandlers();
     }
 
+    if (this._state === 'rejected') {
+      newPromise.reject(this._rejectionReason);
+    }
+
     return newPromise;
   }
 
@@ -69,12 +73,12 @@ class MyPromise {
   _runRejectionHandlers() {
     while(this._rejectionQueue.length > 0) {
       const rejection = this._rejectionQueue.shift();
-      
+
       let returnValue;
       try {
         returnValue = rejection.handler(this._rejectionReason)
       } catch(e) {
-        resolution.promise.reject(e);
+        rejection.promise.reject(e);
       }
 
       if (returnValue && returnValue instanceof MyPromise) {

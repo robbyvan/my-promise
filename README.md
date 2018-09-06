@@ -918,9 +918,9 @@ promise.then(function () {
 });
 ```
 
-说明: main promise的executor就有错. 需要捕获.   
+说明: main promise的executor就有错. 需要捕获. 需要注意的是在executor在queue创建之前就throw了error, 如果仅仅try-catch了executor的错误然后调用reject, queue里其实是什么也没有的.
 
-解决: 同case 11, 去try-catch executor就好.
+解决: 同case 11, 去try-catch executor, 有错误就调用reject. 并且修改then方法, 判断当前是否被reject了. 如果reject了就直接调用新promise的reject方法.
 ```js
 // solution
 
@@ -987,6 +987,11 @@ class MyPromise {
 
     if (this._state === 'resolved') {
       this._runResolutionHandlers();
+    }
+    
+    // 💡这里
+    if (this._state === 'rejected') {
+      newPromise.reject(this._rejectionReason);
     }
 
     return newPromise;
@@ -1187,3 +1192,37 @@ class MyPromise {
   }
 }
 ```
+
+
+### case 14: chaining works after "catch".
+```js
+// test case
+
+var testString = 'foo';
+
+var promise = new MyPromise(function (resolve) {
+    setTimeout(function () {
+        resolve();
+    }, 100);
+});
+
+promise
+    .then(function () {
+        throw new Error('some Error');
+    })
+    .catch(function () {
+        return new MyPromise(function (resolve) {
+            setTimeout(function () {
+                resolve(testString);
+            }, 100);
+        });
+    })
+    .then(function (value) {
+        t.equal(value, testString);
+        t.end();
+    });
+```
+
+说明: 要让在catch后面注册的then仍然有效.   
+
+解决: 
