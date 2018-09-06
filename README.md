@@ -101,7 +101,9 @@ Solution: 为了支持多个resolution handler, 所以在case 2中就先采用�
 ### case 4: resolution handlers can be chained.
 说明: MP需要支持多个resolution handler被chain起来, 所以继续改造来支持then被链式调用.
 ```js
- var testString = 'foo';
+// test case
+
+var testString = 'foo';
 
 var promise = new MyPromise(function (resolve) {
     setTimeout(function () {
