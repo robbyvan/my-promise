@@ -1,6 +1,11 @@
-### ES6的Promise实现
-Implement promise in es6 case by case.    
-实现一个class: MyPromise(简写MP)
+### 关于Promise
+Implement a basic promise in es6 step by step.   
+实现一个基本的MyPromise(后面简称MP).   
+
+### 说明
+之前在网上看见的promise实现原理都描述的不是特别清晰, 所以这里结合youtube上![@vividbytes](https://www.youtube.com/watch?v=C3kUMPtt4hY&t=140s)的实现方式重新整理了一份promise基础实现思路, 加入一些理解来step by step实现一个基础promise. 这里的实现并不是最佳的, 也有edge cases没有考虑, 但是可以很方便理解promise怎么实现异步的.
+
+有误的地方还请大佬指证 _(:з」∠)_
 
 ### case 1: executor function is called immediately.
 ```js
@@ -1599,3 +1604,6 @@ promise
 说明: then方法中注册的第二个参数onRejected是attch在它所在then的上一个promise上的, 如test case, didRun仅在main promise被reject时执行, 而不会因为同层的onFulfilled被reject而触发. onFulfilled的reject是在catch中被接收.   
 
 实现: 在整个实现当中, 无论fulfilled还是rejected都是往下层传播的, 并不会影响同层, 所以这里不需要做任何修改.
+
+### 最后
+到这里一个基本的promise就已经完成了, 前面也提到还有一些edge cases没有考虑~ 不过总的来说这样的实现方式对于认识promise完成异步的原理还是很有帮助的.
